@@ -1,0 +1,40 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: beam-gate-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  db:
+    image: mysql:8
+    container_name: beam-gate-db
+    environment:
+      MYSQL_ROOT_PASSWORD: an7wFTZKr5vz5Vc0YtKz
+      MYSQL_DATABASE: beam
+      MYSQL_USER: beam_user
+      MYSQL_PASSWORD: an7wFTZKr5vz5Vc0YtKz
+    ports:
+      - "3306:3306"
+    volumes:
+      - beam_data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  redis_data:
+  beam_data:
